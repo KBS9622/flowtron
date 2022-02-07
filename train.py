@@ -323,7 +323,7 @@ def train(n_gpus, rank, output_directory, epochs, optim_algo, learning_rate,
             # rescale according to gradient accumulation steps
             loss = loss/grad_accum_step
 
-            # scaler.scale(loss).backward()
+            scaler.scale(loss).backward()
             # if grad_clip_val > 0:
             #     scaler.unscale_(optimizer)
             #     torch.nn.utils.clip_grad_norm_(
@@ -333,7 +333,6 @@ def train(n_gpus, rank, output_directory, epochs, optim_algo, learning_rate,
             # I added +1 here because if not, would't this run at iteration 0, which is the first iter for this code. iteration increases at the end
             if iteration % grad_accum_step == 0:
 
-                scaler.scale(loss).backward()
                 if grad_clip_val > 0:
                     scaler.unscale_(optimizer)
                     torch.nn.utils.clip_grad_norm_(
