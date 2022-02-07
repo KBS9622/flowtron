@@ -109,7 +109,7 @@ class Data(torch.utils.data.Dataset):
             random.shuffle(self.audiopaths_and_text)
 
     def compute_attention_prior(self, audiopath, mel_length, text_length):
-        folder_path = audiopath.split('/')[-2]
+        folder_path = audiopath.split('\\')[-2] #KBS: changed for windows file format
         filename = os.path.basename(audiopath).split('.')[0]
         prior_path = os.path.join(
             self.prior_cache_path,
