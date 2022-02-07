@@ -331,7 +331,7 @@ def train(n_gpus, rank, output_directory, epochs, optim_algo, learning_rate,
                     grad_clip_val)
 
             # I added +1 here because if not, would't this run at iteration 0, which is the first iter for this code. iteration increases at the end
-            if iteration+1 % grad_accum_step == 0:
+            if iteration % grad_accum_step == 0:
                 scaler.step(optimizer)
                 scaler.update()
                 model.zero_grad()
