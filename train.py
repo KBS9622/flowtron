@@ -280,6 +280,7 @@ def train(n_gpus, rank, output_directory, epochs, optim_algo, learning_rate,
     for epoch in range(epoch_offset, epochs):
         print("Epoch: {}".format(epoch))
         for batch in train_loader:
+            print('iteration: {}'.format(iteration))
             (mel, spk_ids, txt, in_lens, out_lens,
                 gate_target, attn_prior) = batch
             mel, spk_ids, txt = mel.cuda(), spk_ids.cuda(), txt.cuda()
@@ -330,7 +331,7 @@ def train(n_gpus, rank, output_directory, epochs, optim_algo, learning_rate,
                     model.parameters(),
                     grad_clip_val)
 
-            # i added +1 here because if not, would't this run at iteration 0, which is the first iter for this code. iteration increases at the end
+            # I added +1 here because if not, would't this run at iteration 0, which is the first iter for this code. iteration increases at the end
             if iteration+1 % grad_accum_step == 0:
                 scaler.step(optimizer)
                 scaler.update()
