@@ -207,7 +207,7 @@ def train(n_gpus, rank, output_directory, epochs, optim_algo, learning_rate,
           checkpoint_path, ignore_layers, include_layers, finetune_layers,
           warmstart_checkpoint_path, with_tensorboard, grad_clip_val,
           gate_loss, fp16_run, use_ctc_loss, ctc_loss_weight,
-          blank_logprob, ctc_loss_start_iter):
+          blank_logprob, ctc_loss_start_iter, grad_accum_step):
     fp16_run = bool(fp16_run)
     use_ctc_loss = bool(use_ctc_loss)
     torch.manual_seed(seed)
@@ -276,10 +276,10 @@ def train(n_gpus, rank, output_directory, epochs, optim_algo, learning_rate,
     apply_ctc = False
 
     # ================ MAIN TRAINNIG LOOP! ===================
+    model.zero_grad()
     for epoch in range(epoch_offset, epochs):
         print("Epoch: {}".format(epoch))
         for batch in train_loader:
-            model.zero_grad()
             (mel, spk_ids, txt, in_lens, out_lens,
                 gate_target, attn_prior) = batch
             mel, spk_ids, txt = mel.cuda(), spk_ids.cuda(), txt.cuda()
@@ -320,6 +320,9 @@ def train(n_gpus, rank, output_directory, epochs, optim_algo, learning_rate,
                 reduced_mle_loss = loss_nll.item()
                 reduced_ctc_loss = loss_ctc.item()
 
+            # rescale according to gradient accumulation steps
+            loss = loss/grad_accum_step
+
             scaler.scale(loss).backward()
             if grad_clip_val > 0:
                 scaler.unscale_(optimizer)
@@ -327,8 +330,11 @@ def train(n_gpus, rank, output_directory, epochs, optim_algo, learning_rate,
                     model.parameters(),
                     grad_clip_val)
 
-            scaler.step(optimizer)
-            scaler.update()
+            # i added +1 here because if not, would't this run at iteration 0, which is the first iter for this code. iteration increases at the end
+            if iteration+1 % grad_accum_step == 0:
+                scaler.step(optimizer)
+                scaler.update()
+                model.zero_grad()
 
             if rank == 0:
                 print("{}:\t{:.9f}".format(

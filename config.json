@@ -21,7 +21,8 @@
         "use_ctc_loss": true,
         "ctc_loss_weight": 0.01,
         "blank_logprob": -8,
-        "ctc_loss_start_iter": 10000
+        "ctc_loss_start_iter": 10000,
+        "grad_accum_step": 6
     },
     "data_config": {
         "training_files": "filelists/ljs_audiopaths_text_sid_train_filelist.txt",
