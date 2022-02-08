@@ -61,6 +61,7 @@ def infer(flowtron_path, waveglow_path, output_dir, text, speaker_id, n_frames,
         data_config['training_files'],
         **dict((k, v) for k, v in data_config.items() if k not in ignore_keys))
     speaker_vecs = trainset.get_speaker_id(speaker_id).cuda()
+    print('Text to synthesise: {}'.format(text))
     text = trainset.get_text(text).cuda()
     speaker_vecs = speaker_vecs[None]
     text = text[None]
